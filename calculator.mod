@@ -18,13 +18,20 @@ mod! VAR principal-sort Var {
 mod! EXP {
 	pr(VAR)
 	[Var ExpPNat < Exp]
+	[Exp ErrExp < Exp&Err]
+	op errExp : -> ErrExp {constr} .
 	op 0 : -> ExpPNat {constr} .
 	op s : ExpPNat -> ExpPNat {constr }
 	op _+_ : Exp Exp -> Exp {constr l-assoc prec: 30} .
+	op _+_ : Exp&Err Exp&Err -> Exp&Err .
 	op sd : Exp Exp -> Exp {constr l-assoc prec: 30} .
+	op sd : Exp&Err Exp&Err -> Exp&Err .
 	op _*_ : Exp Exp -> Exp {constr l-assoc prec: 29} .
+	op _*_ : Exp&Err Exp&Err -> Exp&Err .
 	op _/_ : Exp Exp -> Exp {constr l-assoc prec: 29} .
+	op _/_ : Exp&Err Exp&Err -> Exp&Err .
 	op _%_ : Exp Exp -> Exp {constr l-assoc prec: 29} .
+	op _%_ : Exp&Err Exp&Err -> Exp&Err .
 }
 
 mod! ENV { pr(PNAT) pr(VAR)
@@ -34,23 +41,36 @@ mod! ENV { pr(PNAT) pr(VAR)
 	* { sort Table -> Env, sort EmpTable -> EmpEnv, sort NeTable -> NeEnv, sort ErrTable -> ErrEnv, sort Table&Err -> Env&Err, op errTable -> errEnv, op empTable -> empEnv })
 }
 
-mod! INTER { pr(PNAT) pr(EXP) pr(ENV)
-	op inter : ExpPNat Env -> PNat .
-	op inter : Exp Env&Err -> PNat&Err .
-	op inter : Exp ErrEnv -> ErrPNat .
+mod! STM { pr(EXP)
+	[Stm]
+	
+	op estm : -> Stm {constr} .
+	op _:=_; : Var Exp -> Stm {constr} .
+}
+
+mod! INTER { pr(PNAT) pr(EXP) pr(ENV) pr(STM)
+	op inter : Stm -> Env&Err .
+	op eval : Stm Env&Err -> Env&Err .
+	op evalExp : ExpPNat Env -> PNat .
+	op evalExp : Exp&Err Env&Err -> PNat&Err .
 	
 	-- equations
 	var N : PNat . var EN : ExpPNat . vars E E1 E2 : Exp .
-	var V : Var . var EV : Env .
-	eq inter(E, errEnv) = errPNat .
-	eq inter(0, EV) = 0 .
-	eq inter(V, EV) = lookup(EV,V) .
-	eq inter(s(EN),EV) = s(inter(EN,EV)) .
-	eq inter(E1 + E2,EV) = inter(E1,EV) + inter(E2,EV) .
-	eq inter(sd(E1,E2),EV) = sd(inter(E1,EV),inter(E2,EV)) .
-	eq inter(E1 * E2,EV) = inter(E1,EV) * inter(E2,EV) .
-	eq inter(E1 / E2,EV) = inter(E1,EV) quo inter(E2,EV) .
-	eq inter(E1 % E2,EV) = inter(E1,EV) rem inter(E2,EV) .
+	var V : Var . var EV : Env . var S : Stm . var EE : Env&Err .
+	eq inter(S) = eval(S, empEnv) .
+	
+	eq eval((V := E ;), errEnv) = errEnv .
+	eq eval((V := E ;), EV) = update(EV,V,evalExp(E,EV)) .
+	
+	eq evalExp(E, errEnv) = errPNat .
+	eq evalExp(0, EV) = 0 .
+	eq evalExp(V, EV) = lookup(EV,V) .
+	eq evalExp(s(EN),EV) = s(evalExp(EN,EV)) .
+	eq evalExp(E1 + E2,EV) = evalExp(E1,EV) + evalExp(E2,EV) .
+	eq evalExp(sd(E1,E2),EV) = sd(evalExp(E1,EV),evalExp(E2,EV)) .
+	eq evalExp(E1 * E2,EV) = evalExp(E1,EV) * evalExp(E2,EV) .
+	eq evalExp(E1 / E2,EV) = evalExp(E1,EV) quo evalExp(E2,EV) .
+	eq evalExp(E1 % E2,EV) = evalExp(E1,EV) rem evalExp(E2,EV) .
 }
 
 mod! INSTR principal-sort Instr {
@@ -59,11 +79,13 @@ mod! INSTR principal-sort Instr {
 	op errInstr : -> ErrInstr {constr} .
 	op push : PNat -> Instr {constr} .
 	op load : Var -> Instr {constr} .
+	op store : Var -> Instr {constr} .
 	op add : -> Instr {constr} .
 	op minus : -> Instr {constr} .
 	op mult : -> Instr {constr} .
 	op div : -> Instr {constr} .
 	op mod : -> Instr {constr} .
+	op quit : -> Instr {constr} .
 }
 
 mod! LIST (E :: TRIV-ERR) principal-sort List { pr(PNAT)
@@ -100,59 +122,67 @@ mod! VM {
 	pr(ILIST)
 	pr(STACK)
 	pr(ENV)
-	op vm : IList Env&Err -> PNat&Err .
-	op exec : IList Stack&Err Env&Err -> PNat&Err .
+	op vm : IList -> Env&Err .
+	op exec : IList Stack&Err Env&Err -> Env&Err .
 	
 	-- equations
-	var IL : IList . var PC : PNat . var Stk : Stack .
+	var IL : IList . var PC : PNat . var Stk : Stack&Err . var SE : Stack&Err .
 	var N : PNat . vars NE NE1 NE2 : PNat&Err .
 	var V : Var . var EV : Env . var EE : Env&Err .
-	eq vm(IL, EE) = exec(IL, empstk, EE) .
 	
-	eq exec(IL, Stk, errEnv) = errPNat .
-	eq exec(iln, empstk, EV) = errPNat .
-	eq exec(iln, NE | empstk, EV) = NE .
-	eq exec(iln, NE | NE1 | Stk, EV) = errPNat .
+	eq vm(IL) = exec(IL, empstk, empEnv) .
+	eq exec(IL, SE, errEnv) = errEnv .
+	eq exec(IL, errStack, EV) = errEnv .
+	eq exec(iln, Stk, EV) = errEnv .
 	
 	eq exec(push(N) | IL, Stk, EV) = exec(IL,N | Stk, EV) .
 	eq exec(load(V) | IL, Stk, EV) = exec(IL, lookup(EV,V) | Stk, EV) .
+	eq exec(store(V) | IL, empstk, EV) = errEnv .
+	eq exec(store(V) | IL, NE | Stk, EV) = exec(IL, Stk, update(EV,V,NE)) .
 	
-	eq exec(add | IL, empstk, EV) = errPNat .
-	eq exec(add | IL, NE | empstk, EV) = errPNat .
+	eq exec(add | IL, empstk, EV) = errEnv .
+	eq exec(add | IL, NE | empstk, EV) = errEnv .
 	eq exec(add | IL, NE2 | NE1 | Stk, EV) = exec(IL, NE1 + NE2 | Stk, EV) .
 	
-	eq exec(minus | IL, empstk, EV) = errPNat .
-	eq exec(minus | IL, NE | empstk, EV) = errPNat .
+	eq exec(minus | IL, empstk, EV) = errEnv .
+	eq exec(minus | IL, NE | empstk, EV) = errEnv .
 	eq exec(minus | IL, NE2 | NE1 | Stk, EV) = exec(IL, sd(NE1,NE2) | Stk, EV) .
 	
-	eq exec(mult | IL, empstk, EV) = errPNat .
-	eq exec(mult | IL, NE1 | empstk, EV) = errPNat .
+	eq exec(mult | IL, empstk, EV) = errEnv .
+	eq exec(mult | IL, NE1 | empstk, EV) = errEnv .
 	eq exec(mult | IL, NE2 | NE1 | Stk, EV) = exec(IL, NE1 * NE2 | Stk, EV) .
 	
-	eq exec(div | IL, empstk, EV) = errPNat .
-	eq exec(div | IL, NE | empstk, EV) = errPNat .
+	eq exec(div | IL, empstk, EV) = errEnv .
+	eq exec(div | IL, NE | empstk, EV) = errEnv .
 	eq exec(div | IL, NE2 | NE1 | Stk, EV) = exec(IL, NE1 quo NE2 | Stk, EV) .
 	
-	eq exec(mod | IL, empstk, EV) = errPNat .
-	eq exec(mod | IL, NE | empstk, EV) = errPNat .
+	eq exec(mod | IL, empstk, EV) = errEnv .
+	eq exec(mod | IL, NE | empstk, EV) = errEnv .
 	eq exec(mod | IL, NE2 | NE1 | Stk, EV) = exec(IL, NE1 rem NE2 | Stk, EV) .
+	
+	eq exec(quit | IL, Stk, EE) = EE .
 }
 
-mod! COMP { pr(EXP) pr(ILIST)
-	op comp : Exp -> IList .
+mod! COMP { pr(EXP) pr(ILIST) pr(STM)
+	op comp : Stm -> IList .
+	op gen : Stm -> IList .
+	op genExp : Exp -> IList .
 	op en2n : ExpPNat -> PNat .
 	
 	-- equations
 	var EN : ExpPNat . vars E E1 E2 : Exp .
-	var V : Var .
+	var V : Var . var S : Stm .
+	eq comp(S) = gen(S) @ (quit | iln) .
 	
-	eq comp(EN) = push(en2n(EN)) | iln .
-	eq comp(V) = load(V) | iln .
-	eq comp(E1 + E2) = comp(E1) @ comp(E2) @ (add | iln) .
-	eq comp(sd(E1,E2)) = comp(E1) @ comp(E2) @ (minus | iln) .
-	eq comp(E1 * E2) = comp(E1) @ comp(E2) @ (mult | iln) .
-	eq comp(E1 / E2) = comp(E1) @ comp(E2) @ (div | iln) .
-	eq comp(E1 % E2) = comp(E1) @ comp(E2) @ (mod | iln) .
+	eq gen(V := E ;) = genExp(E) @ (store(V) | iln) .
+	
+	eq genExp(EN) = push(en2n(EN)) | iln .
+	eq genExp(V) = load(V) | iln .
+	eq genExp(E1 + E2) = genExp(E1) @ genExp(E2) @ (add | iln) .
+	eq genExp(sd(E1,E2)) = genExp(E1) @ genExp(E2) @ (minus | iln) .
+	eq genExp(E1 * E2) = genExp(E1) @ genExp(E2) @ (mult | iln) .
+	eq genExp(E1 / E2) = genExp(E1) @ genExp(E2) @ (div | iln) .
+	eq genExp(E1 % E2) = genExp(E1) @ genExp(E2) @ (mod | iln) .
 	eq en2n(0) = 0 .
 	eq en2n(s(EN)) = s(en2n(EN)) .
 }
@@ -162,13 +192,14 @@ mod! VERIFY-COMP {
 	pr(INTER)
 	pr(VM)
 	
-	op th : Exp Env -> Bool .
-	op lemPev : ExpPNat Env -> Bool .
+	op th : Var Exp -> Bool .
+	op lemPev : ExpPNat Env&Err -> Bool .
+	op lem1 : Exp IList Stack&Err Env&Err -> Bool .
 	op lem1 : Exp IList Stack&Err Env&Err -> Bool .
 	
 	var E : Exp . var EN : ExpPNat . var V : Var .
-	var IL : IList . var Stk : Stack&Err . var EV : Env .
-	eq th(E, EV) = (inter(E, EV) = vm(comp(E), EV)) .
-	eq lemPev(EN, EV) = (inter(EN, EV) = en2n(EN)) .
-	eq lem1(E, IL, Stk, EV) = (exec(comp(E) @ IL, Stk, EV) = exec(IL, vm(comp(E), EV) | Stk, EV)) .
+	var IL : IList . var SE : Stack&Err . var EV : Env . var EE : Env&Err .
+	eq th(V, E) = (inter(V := E ;) = vm(comp(V := E ;))) .
+	eq lemPev(EN, EV) = (evalExp(EN, EV) = en2n(EN)) .
+	eq lem1(E, IL, SE, EE) = (exec(genExp(E) @ IL, SE, EE) = exec(IL, evalExp(E, EE) | SE, EE)) .
 }

@@ -6,6 +6,7 @@ mod! PNAT principal-sort PNat {
 	op errPNat : -> ErrPNat {constr} .
 	op if_then{_}else{_} : Bool PNat&Err PNat&Err -> PNat&Err .
 	op _<_ : PNat PNat -> Bool .
+	op _<_ : PNat&Err PNat&Err -> Bool .
 	op _+_ : PNat PNat -> PNat .
 	op _+_ : PNat&Err PNat&Err -> PNat&Err .
 	op _*_ : PNat PNat -> PNat .
@@ -31,6 +32,8 @@ mod! PNAT principal-sort PNat {
 		-- Comparison and conditional statement
 		eq if true then {NE} else {ME} = NE .
 		eq if false then {NE} else {ME} = ME .
+		eq (NE < errPNat) = false .
+		eq (errPNat < NE) = false .
 		eq (0 < NzN) = true .
 		eq (N < 0) = false .
 		eq (s(M) < s(N)) = (M < N) .
