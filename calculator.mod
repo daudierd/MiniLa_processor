@@ -1,3 +1,13 @@
+-- ----------------------------------------------------------
+--                                                         --
+--       MiniLa language processor verified compiler       --
+--                      SPECIFICATION                      --
+--                                                         --
+--                     DAUDIER, Dorian                     --
+--            Special research student at JAIST            --
+--                                                         --
+-- ----------------------------------------------------------
+
 in table.mod
 in pnat.mod
 
@@ -11,7 +21,7 @@ mod! EXP {
 	op 0 : -> ExpPNat {constr} .
 	op s : ExpPNat -> ExpPNat {constr }
 	op _+_ : Exp Exp -> Exp {constr l-assoc prec: 30} .
-	op _-_ : Exp Exp -> Exp {constr l-assoc prec: 30} .
+	op sd : Exp Exp -> Exp {constr l-assoc prec: 30} .
 	op _*_ : Exp Exp -> Exp {constr l-assoc prec: 29} .
 	op _/_ : Exp Exp -> Exp {constr l-assoc prec: 29} .
 	op _%_ : Exp Exp -> Exp {constr l-assoc prec: 29} .
@@ -37,7 +47,7 @@ mod! INTER { pr(PNAT) pr(EXP) pr(ENV)
 	eq inter(V, EV) = lookup(EV,V) .
 	eq inter(s(EN),EV) = s(inter(EN,EV)) .
 	eq inter(E1 + E2,EV) = inter(E1,EV) + inter(E2,EV) .
-	eq inter(E1 - E2,EV) = sd(inter(E1,EV),inter(E2,EV)) .
+	eq inter(sd(E1,E2),EV) = sd(inter(E1,EV),inter(E2,EV)) .
 	eq inter(E1 * E2,EV) = inter(E1,EV) * inter(E2,EV) .
 	eq inter(E1 / E2,EV) = inter(E1,EV) quo inter(E2,EV) .
 	eq inter(E1 % E2,EV) = inter(E1,EV) rem inter(E2,EV) .
@@ -139,7 +149,7 @@ mod! COMP { pr(EXP) pr(ILIST)
 	eq comp(EN) = push(en2n(EN)) | iln .
 	eq comp(V) = load(V) | iln .
 	eq comp(E1 + E2) = comp(E1) @ comp(E2) @ (add | iln) .
-	eq comp(E1 - E2) = comp(E1) @ comp(E2) @ (minus | iln) .
+	eq comp(sd(E1,E2)) = comp(E1) @ comp(E2) @ (minus | iln) .
 	eq comp(E1 * E2) = comp(E1) @ comp(E2) @ (mult | iln) .
 	eq comp(E1 / E2) = comp(E1) @ comp(E2) @ (div | iln) .
 	eq comp(E1 % E2) = comp(E1) @ comp(E2) @ (mod | iln) .

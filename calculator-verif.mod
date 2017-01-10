@@ -1,3 +1,13 @@
+-- ----------------------------------------------------------
+--                                                         --
+--       MiniLa language processor verified compiler       --
+--                      PROOF  SCORES                      --
+--                                                         --
+--                     DAUDIER, Dorian                     --
+--            Special research student at JAIST            --
+--                                                         --
+-- ----------------------------------------------------------
+
 in calculator.mod
 
 -- ----------
@@ -55,7 +65,7 @@ open VERIFY-COMP .
 	eq exec(comp(e2) @ IL, Stk, EV) = exec(IL, vm(comp(e2), EV) | Stk, EV) .
 	-- check
 	red lem1(e1 + e2,il,s,ev) .
-	red lem1(e1 - e2,il,s,ev) .
+	red lem1(sd(e1,e2),il,s,ev) .
 	red lem1(e1 * e2,il,s,ev) .
 	red lem1(e1 / e2,il,s,ev) .
 	red lem1(e1 % e2,il,s,ev) .
@@ -99,7 +109,7 @@ open VERIFY-COMP .
 	eq inter(e2, EV) = vm(comp(e2), EV) .
 	-- check
 	red th(e1 + e2, ev) .
-	red th(e1 - e2, ev) .
+	red th(sd(e1,e2), ev) .
 	red th(e1 * e2, ev) .
 	red th(e1 / e2, ev) .
 	red th(e1 % e2, ev) .
