@@ -29,64 +29,19 @@ open VERIFY-COMP .
 	red lemPev(s(en), ev) .
 close
 
--- ----------
--- LEMMA 1 --
--- ----------
+-- ------------------------------------------
+-- LEMMA 1 PROOFS CAN BE FOUND IN lem1.mod --
+-- ------------------------------------------
 
--- exec(genExp(E) @ IL, Stk, EV) = exec(IL, evalExp(E, EV) | Stk, EV) .
+-- exec(genExp(E) @ IL, Stk, EV) = exec(IL, evalExp(E, EV) | Stk, EV)
+-- exec(gen(S) @ IL, SE, EE) = exec(IL, SE, eval(S, EE))
 
--- BASE CASE
-	-- Exp -> PNat
-open VERIFY-COMP .
-	op en : -> ExpPNat .
-	op il : -> IList .
-	op stk : -> Stack&Err .
-	op ev : -> Env .
-	-- lemma Pev
-	eq evalExp(EN, EV) = en2n(EN) .
-	-- check
-	red lem1(en, il, stk, errEnv) .
-	red lem1(en, il, stk, ev) .
-close
+-- ---------------
+--    THEOREM   --
+-- SUB-CASE TH1 --
+-- ---------------
 
-	-- Exp -> Var
-open VERIFY-COMP .
-	op v : -> Var .
-	op il : -> IList .
-	op stk : -> Stack&Err .
-	op ev : -> Env .
-	-- lemma Pev
-	eq evalExp(EN, EV) = en2n(EN) .
-	-- check
-	red lem1(v, il, stk, errEnv) .
-	red lem1(v, il, stk, ev) .
-close
-
--- INDUCTION CASE
-open VERIFY-COMP .
-	ops e1 e2 : -> ExpPNat .
-	op e : -> Exp .
-	op il : -> IList .
-	op stk : -> Stack&Err .
-	op ev : -> Env .
-	-- lemma Pev
-	eq evalExp(EN, EV) = en2n(EN) .
-	-- IH
-	eq exec(genExp(e1) @ IL, SE, EE) = exec(IL, evalExp(e1, EE) | SE, EE) .
-	eq exec(genExp(e2) @ IL, SE, EE) = exec(IL, evalExp(e2, EE) | SE, EE) .
-	-- check
-	red lem1(e,il,stk,errEnv) .
-	
-	red lem1(e1 + e2,il,stk,ev) .
-	red lem1(sd(e1,e2),il,stk,ev) .
-	red lem1(e1 * e2,il,stk,ev) .
-	red lem1(e1 / e2,il,stk,ev) .
-	red lem1(e1 % e2,il,stk,ev) .
-close
-
--- ----------
--- THEOREM --
--- ----------
+-- inter(V := E ;) = vm(comp(V := E ;))
 
 -- BASE CASE
 	-- Exp -> PNat
@@ -96,14 +51,14 @@ open VERIFY-COMP .
 	-- lemma Pev
 	eq evalExp(EN, EV) = en2n(EN) .
 	-- check
-	red th(v, en) .
+	red th1(v, en) .
 close
 
 	-- Exp -> Var
 open VERIFY-COMP .
 	ops v x : -> Var .
 	-- check
-	red th(v, x) .
+	red th1(v, x) .
 close
 
 -- INDUCTION CASE
@@ -118,9 +73,43 @@ open VERIFY-COMP .
 	eq inter(V := e1 ;) = vm(comp(V := e1 ;)) .
 	eq inter(V := e2 ;) = vm(comp(V := e2 ;)) .
 	-- check
-	red th(v, e1 + e2) .
-	red th(v, sd(e1,e2)) .
-	red th(v, e1 * e2) .
-	red th(v, e1 / e2) .
-	red th(v, e1 % e2) .
+	red th1(v, e1 + e2) .
+	red th1(v, sd(e1,e2)) .
+	red th1(v, e1 * e2) .
+	red th1(v, e1 / e2) .
+	red th1(v, e1 % e2) .
+close
+
+-- ----------
+-- THEOREM --
+-- ----------
+
+-- inter(S) = vm(comp(S))
+
+-- THEOREM: BASE CASE
+	-- Stm = estm
+open VERIFY-COMP .
+	-- check
+	red th(estm) .
+close
+
+	-- Stm = (V := E ;)
+open VERIFY-COMP .
+	op e : -> Exp .
+	op v : -> Var .
+	-- check
+	-- theorem th1 being a special case of the main theorem
+	red th1(v,e) implies th(v := e ;) . 
+close
+
+-- THEOREM: INDUCTION CASE
+open VERIFY-COMP .
+	ops s1 s2 : -> Stm .
+	-- lemma 1S
+	eq exec(gen(S) @ IL, SE, EE) = exec(IL, SE, eval(S, EE)) .
+	-- IH
+	eq inter(s1) = vm(comp(s1)) .
+	eq inter(s2) = vm(comp(s2)) .
+	-- check
+	red th(s1 s2) .
 close
