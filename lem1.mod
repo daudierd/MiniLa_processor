@@ -10,59 +10,79 @@
 
 in calculator.mod
 
+-- -----------------------------------------------
+-- LEMMA X & Y PROOFS CAN BE FOUND IN lemXY.mod --
+-- -----------------------------------------------
+
+-- nth(len(IL1), IL1 @ IL2) = nth(0, IL2)
+-- nth(s(len(IL1)), IL1 @ IL2) = nth(s(0), IL2)
+
+-- len(IL @ (I | iln)) = s(len(IL))
+-- len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E)))
+-- len(IL @ genExp(E1) @ genExp(E2) @ (I | iln)) = s(len(IL @ genExp(E1) @ genExp(E2)))
+
 -- -----------
 -- LEMMA 1E --
 -- -----------
 
--- exec(genExp(E) @ IL, SE, EE) = exec(IL, evalExp(E, EE) | SE, EE)
+-- exec(IL1 @ genExp(E) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(E) @ IL2, len(genExp(E)) + len(IL1), evalExp(E, EE) | SE, EE)
 
 -- BASE CASE
 	-- Exp -> PNat
 open VERIFY-COMP .
 	op en : -> ExpPNat .
-	op il : -> IList .
+	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
 	-- lemma Pev
 	eq evalExp(EN, EV) = en2n(EN) .
+	-- lemma X
+	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
 	-- check
-	red lem1E(en, il, stk, errEnv) .
-	red lem1E(en, il, stk, ev) .
+	red lem1E(en, il1, il2, stk, errEnv) .
+	red lem1E(en, il1, il2, stk, ev) .
 close
 
 	-- Exp -> Var
 open VERIFY-COMP .
 	op v : -> Var .
-	op il : -> IList .
+	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
 	-- lemma Pev
 	eq evalExp(EN, EV) = en2n(EN) .
+	-- lemma X
+	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
 	-- check
-	red lem1E(v, il, stk, errEnv) .
-	red lem1E(v, il, stk, ev) .
+	red lem1E(v, il1, il2, stk, errEnv) .
+	red lem1E(v, il1, il2, stk, ev) .
 close
 
 -- INDUCTION CASE
 open VERIFY-COMP .
-	ops e1 e2 : -> ExpPNat .
-	op e : -> Exp .
-	op il : -> IList .
+	ops e e1 e2 : -> Exp .
+	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
-	-- lemma Pev
-	eq evalExp(EN, EV) = en2n(EN) .
-	-- IH
-	eq exec(genExp(e1) @ IL, SE, EE) = exec(IL, evalExp(e1, EE) | SE, EE) .
-	eq exec(genExp(e2) @ IL, SE, EE) = exec(IL, evalExp(e2, EE) | SE, EE) .
-	-- check
-	red lem1E(e,il,stk,errEnv) .
 	
-	red lem1E(e1 + e2,il,stk,ev) .
-	red lem1E(sd(e1,e2),il,stk,ev) .
-	red lem1E(e1 * e2,il,stk,ev) .
-	red lem1E(e1 / e2,il,stk,ev) .
-	red lem1E(e1 % e2,il,stk,ev) .
+	-- IH
+	eq exec(IL1 @ genExp(e1) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(e1) @ IL2, len(genExp(e1)) + len(IL1), evalExp(e1, EE) | SE, EE) .
+	eq exec(IL1 @ genExp(e2) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(e2) @ IL2, len(genExp(e2)) + len(IL1), evalExp(e2, EE) | SE, EE) .
+	
+	-- lemma Ladd
+	eq len(IL1) + len(IL2) = len(IL2 @ IL1) .
+	-- lemma X
+	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
+	-- lemma Y-2
+	eq len(IL @ genExp(E1) @ genExp(E2) @ (I | iln)) = s(len(IL @ genExp(E1) @ genExp(E2))) .
+	
+	-- check
+	red lem1E(e, il1, il2, stk, errEnv) .
+	red lem1E(e1 + e2, il1, il2, stk, ev) .
+	red lem1E(sd(e1,e2), il1, il2, stk, ev) .
+	red lem1E(e1 * e2, il1, il2, stk, ev) .
+	red lem1E(e1 / e2, il1, il2, stk, ev) .
+	red lem1E(e1 % e2, il1, il2, stk, ev) .
 close
 
 -- -----------
@@ -74,38 +94,48 @@ close
 -- BASE CASE
 	-- S = estm
 open VERIFY-COMP .
-	op il : -> IList .
+	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
 	-- check
-	red lem1S(estm, il, stk, errEnv) .
-	red lem1S(estm, il, stk, ev) .
+	red lem1S(estm, il1, il2, stk, errEnv) .
+	red lem1S(estm, il1, il2, stk, ev) .
 close
 
 	-- S = (V := E ;)
 open VERIFY-COMP .
 	op v : -> Var .
 	op e : -> Exp .
-	op il : -> IList .
+	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
+	
+	-- lemma Ladd
+	eq len(IL1) + len(IL2) = len(IL2 @ IL1) .
+	-- lemma X
+	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
+	-- lemma Y-1
+	eq len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E))) .
 	-- lemma 1E
-	eq exec(genExp(E) @ IL, SE, EV) = exec(IL, evalExp(E, EV) | SE, EV) .
+	eq exec(IL1 @ genExp(E) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(E) @ IL2, len(genExp(E)) + len(IL1), evalExp(E, EE) | SE, EE) .
+	
 	-- check
-	red lem1S(v := e ;, il, stk, errEnv) .
-	red lem1S(v := e ;, il, stk, ev) .
+	red lem1S(v := e ;, il1, il2, stk, errEnv) .
+	red lem1S(v := e ;, il1, il2, stk, ev) .
 close
 
 -- INDUCTION CASE
 open VERIFY-COMP .
 	ops s1 s2 : -> Stm .
-	op il : -> IList .
+	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
+	-- lemma Ladd
+	eq len(IL1) + len(IL2) = len(IL2 @ IL1) .
 	-- IH
-	eq exec(gen(s1) @ IL, SE, EE) = exec(IL, SE, eval(s1, EE)) .
-	eq exec(gen(s2) @ IL, SE, EE) = exec(IL, SE, eval(s2, EE)) .
+	eq exec(IL @ gen(s1) @ IL2, len(IL), SE, EE) = exec(IL @ gen(s1) @ IL2, len(gen(s1)) + len(IL), SE, eval(s1, EE)) .
+	eq exec(IL @ gen(s2) @ IL2, len(IL), SE, EE) = exec(IL @ gen(s2) @ IL2, len(gen(s2)) + len(IL), SE, eval(s2, EE)) .
 	-- check
-	red lem1S((s1 s2), il, stk, errEnv) .
-	red lem1S((s1 s2), il, stk, ev) .
+	red lem1S((s1 s2), il1, il2, stk, errEnv) .
+	red lem1S((s1 s2), il1, il2, stk, ev) .
 close

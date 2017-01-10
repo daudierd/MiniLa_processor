@@ -98,7 +98,8 @@ mod! LIST (E :: TRIV-ERR) principal-sort List { pr(PNAT)
 	op errList : -> ErrList {constr} .
 	op _|_ : Elt.E List -> NnList {constr} .
 	op _|_ : Elt&Err.E List&Err -> List&Err .
-	
+	op len : List -> PNat .
+	op len : List&Err -> PNat&Err .
 	op _@_ : List List -> List {assoc} .
 	op _@_ : List&Err List&Err -> List&Err .
 	
@@ -107,6 +108,10 @@ mod! LIST (E :: TRIV-ERR) principal-sort List { pr(PNAT)
 	-- _@_
 	eq nil @ L2 = L2 .
 	eq (E | L1) @ L2 = E | (L1 @ L2) .
+	-- len
+	eq len(errList) = errPNat .
+	eq len(nil) = 0 .
+	eq len(E | L1) = s(len(L1)) .
 }
 
 
@@ -125,45 +130,55 @@ mod! VM {
 	pr(ILIST)
 	pr(STACK)
 	pr(ENV)
-	op vm : IList -> Env&Err .
-	op exec : IList Stack&Err Env&Err -> Env&Err .
+	op vm : IList&Err -> Env&Err .
+	op exec : IList&Err PNat&Err Stack&Err Env&Err -> Env&Err .
+	op exec2 : Instr&Err IList&Err PNat&Err Stack&Err Env&Err -> Env&Err .
+	op nth : PNat IList -> Instr .
+	op nth : PNat&Err IList&Err -> Instr&Err .
 	
 	-- equations
-	var IL : IList . var PC : PNat . var SE : Stack&Err .
-	var N : PNat . vars NE NE1 NE2 : PNat&Err .
+	var IL : IList . var ILE : IList&Err . vars PC N N1 N2 : PNat . var SE : Stack&Err . var I : Instr . var IE : Instr&Err . vars NE NE1 NE2 : PNat&Err .
 	var V : Var . var EV : Env . var EE : Env&Err .
 	
-	eq vm(IL) = exec(IL, empstk, empEnv) .
-	eq exec(IL, SE, errEnv) = errEnv .
-	eq exec(IL, errStack, EV) = errEnv .
-	eq exec(iln, SE, EV) = errEnv .
+	eq nth(errPNat, ILE) = errInstr .
+	eq nth(N, errIList) = errInstr .
+	eq nth(N, iln) = errInstr .
+	eq nth(0, I | IL) = I .
+	eq nth(s(N), I | IL) = nth(N, IL) .
 	
-	eq exec(push(N) | IL, SE, EV) = exec(IL,N | SE, EV) .
-	eq exec(load(V) | IL, SE, EV) = exec(IL, lookup(EV,V) | SE, EV) .
-	eq exec(store(V) | IL, empstk, EV) = errEnv .
-	eq exec(store(V) | IL, NE | SE, EV) = exec(IL, SE, update(EV,V,NE)) .
+	eq vm(IL) = exec(IL, 0, empstk, empEnv) .
+	eq exec(IL, PC, SE, EV) = exec2(nth(PC, IL), IL, PC, SE, EV) .
+	eq exec(ILE, PC, SE, errEnv) = errEnv .
+	eq exec(ILE, PC, errStack, EV) = errEnv .
+	eq exec(iln, PC, SE, EV) = errEnv .
 	
-	eq exec(add | IL, empstk, EV) = errEnv .
-	eq exec(add | IL, NE | empstk, EV) = errEnv .
-	eq exec(add | IL, NE2 | NE1 | SE, EV) = exec(IL, NE1 + NE2 | SE, EV) .
-	
-	eq exec(minus | IL, empstk, EV) = errEnv .
-	eq exec(minus | IL, NE | empstk, EV) = errEnv .
-	eq exec(minus | IL, NE2 | NE1 | SE, EV) = exec(IL, sd(NE1,NE2) | SE, EV) .
-	
-	eq exec(mult | IL, empstk, EV) = errEnv .
-	eq exec(mult | IL, NE1 | empstk, EV) = errEnv .
-	eq exec(mult | IL, NE2 | NE1 | SE, EV) = exec(IL, NE1 * NE2 | SE, EV) .
-	
-	eq exec(div | IL, empstk, EV) = errEnv .
-	eq exec(div | IL, NE | empstk, EV) = errEnv .
-	eq exec(div | IL, NE2 | NE1 | SE, EV) = exec(IL, NE1 quo NE2 | SE, EV) .
-	
-	eq exec(mod | IL, empstk, EV) = errEnv .
-	eq exec(mod | IL, NE | empstk, EV) = errEnv .
-	eq exec(mod | IL, NE2 | NE1 | SE, EV) = exec(IL, NE1 rem NE2 | SE, EV) .
-	
-	eq exec(quit | IL, SE, EE) = EE .
+	-- exec2
+		eq exec2(push(N), IL, PC, SE, EV) = exec(IL, s(PC), N | SE, EV) .
+		eq exec2(load(V), IL, PC, SE, EV) = exec(IL, s(PC), lookup(EV,V) | SE, EV) .
+		eq exec2(store(V), IL, PC, empstk, EV) = errEnv .
+		eq exec2(store(V), IL, PC, NE | SE, EV) = exec(IL, s(PC), SE, update(EV,V,NE)) .
+		
+		eq exec2(add, IL, PC, empstk, EV) = errEnv .
+		eq exec2(add, IL, PC, NE | empstk, EV) = errEnv .
+		eq exec2(add, IL, PC, NE2 | NE1 | SE, EV) = exec(IL, s(PC), NE1 + NE2 | SE, EV) .
+		
+		eq exec2(minus, IL, PC, empstk, EV) = errEnv .
+		eq exec2(minus, IL, PC, NE | empstk, EV) = errEnv .
+		eq exec2(minus, IL, PC, NE2 | NE1 | SE, EV) = exec(IL, s(PC), sd(NE1,NE2) | SE, EV) .
+		
+		eq exec2(mult, IL, PC, empstk, EV) = errEnv .
+		eq exec2(mult, IL, PC, NE1 | empstk, EV) = errEnv .
+		eq exec2(mult, IL, PC, NE2 | NE1 | SE, EV) = exec(IL, s(PC), NE1 * NE2 | SE, EV) .
+		
+		eq exec2(div, IL, PC, empstk, EV) = errEnv .
+		eq exec2(div, IL, PC, NE | empstk, EV) = errEnv .
+		eq exec2(div, IL, PC, NE2 | NE1 | SE, EV) = exec(IL, s(PC), NE1 quo NE2 | SE, EV) .
+		
+		eq exec2(mod, IL, PC, empstk, EV) = errEnv .
+		eq exec2(mod, IL, PC, NE | empstk, EV) = errEnv .
+		eq exec2(mod, IL, PC, NE2 | NE1 | SE, EV) = exec(IL, s(PC), NE1 rem NE2 | SE, EV) .
+		
+		eq exec2(quit, IL, PC, SE, EE) = EE .
 }
 
 mod! COMP { pr(EXP) pr(ILIST) pr(STM)
@@ -200,16 +215,39 @@ mod! VERIFY-COMP {
 	op th : Stm -> Bool .
 	op th1 : Var Exp -> Bool .
 	op lemPev : ExpPNat Env&Err -> Bool .
-	op lem1E : Exp IList Stack Env -> Bool .
-	op lem1E : Exp IList Stack&Err Env&Err -> Bool .
-	op lem1S : Stm IList Stack&Err Env&Err -> Bool .
+	op lemLadd : IList IList -> Bool .
 	
-	var E : Exp . var EN : ExpPNat . var V : Var . var S : Stm .
-	var IL : IList . var SE : Stack&Err . var EV : Env . var EE : Env&Err .
+	vars E E1 E2 : Exp . var EN : ExpPNat . var V : Var . var S : Stm .
+	vars IL IL1 IL2 : IList . var I : Instr . var SE : Stack&Err . var EV : Env . var EE : Env&Err .
 	
 	eq th(S) = (inter(S) = vm(comp(S))) .
 	eq th1(V, E) = (inter(V := E ;) = vm(comp(V := E ;))) .
 	eq lemPev(EN, EV) = (evalExp(EN, EV) = en2n(EN)) .
-	eq lem1E(E, IL, SE, EE) = (exec(genExp(E) @ IL, SE, EE) = exec(IL, evalExp(E, EE) | SE, EE)) .
-	eq lem1S(S, IL, SE, EE) = (exec(gen(S) @ IL, SE, EE) = exec(IL, SE, eval(S, EE))) .
+	eq lemLadd(IL1, IL2) = (len(IL1) + len(IL2) = len(IL1 @ IL2)) .
+	
+	-- lemma 1
+		op lem1E-0 : Exp IList Stack&Err Env&Err -> Bool .
+		op lem1E : Exp IList IList Stack&Err Env&Err -> Bool .
+		op lem1S-0 : Stm IList Stack&Err Env&Err -> Bool .
+		op lem1S : Stm IList IList Stack&Err Env&Err -> Bool .
+		
+		eq lem1E-0(E, IL, SE, EE) = (exec(genExp(E) @ IL, 0, SE, EE) = exec(genExp(E) @ IL, len(genExp(E)), evalExp(E, EE) | SE, EE)) .
+		eq lem1E(E, IL1, IL2, SE, EE) = (exec(IL1 @ genExp(E) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(E) @ IL2, len(genExp(E)) + len(IL1), evalExp(E, EE) | SE, EE)) .
+		
+		eq lem1S-0(S, IL, SE, EE) = (exec(gen(S) @ IL, 0, SE, EE) = exec(gen(S) @ IL, len(gen(S)), SE, eval(S, EE))) .
+		eq lem1S(S, IL1, IL2, SE, EE) = (exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(gen(S)) + len(IL1), SE, eval(S, EE))) .
+	
+	-- lemma X
+		op lemX-0 : IList IList -> Bool .
+		op lemX-1 : IList IList -> Bool .
+		eq lemX-0(IL1, IL2) = (nth(len(IL1), IL1 @ IL2) = nth(0, IL2)) .
+		eq lemX-1(IL1, IL2) = (nth(s(len(IL1)), IL1 @ IL2) = nth(s(0), IL2)) .
+	
+	-- lemma Y
+		op lemY-0 : IList Instr -> Bool .
+		op lemY-1 : IList Instr Exp -> Bool .
+		op lemY-2 : IList Instr Exp Exp -> Bool .
+		eq lemY-0(IL, I) = (len(IL @ (I | iln)) = s(len(IL))) .
+		eq lemY-1(IL, I, E) = (len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E)))) .
+		eq lemY-2(IL, I, E1, E2) = (len(IL @ genExp(E1) @ genExp(E2) @ (I | iln)) = s(len(IL @ genExp(E1) @ genExp(E2)))) .
 }
