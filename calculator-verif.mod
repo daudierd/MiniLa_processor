@@ -133,6 +133,29 @@ open VERIFY-COMP .
 	red th1(v,e) implies th(v := e ;) . 
 close
 
+	-- Stm = if E { S1 } else { S2 }
+	-- Case splitting on evalExp(e, ev)
+	open VERIFY-COMP .
+		pr(SIMPLIFY)
+		op e : -> Exp .
+		ops s1 s2 : -> Stm .
+		ops il1 il2 : -> IList .
+		
+		-- Case splitting : evalExp(e, ev) = 0
+		eq evalExp(e,empEnv) = 0 .
+			
+		-- lemma 1E-0
+		eq exec(genExp(E) @ IL2, 0, SE, EE) = exec(genExp(E) @ IL2, len(genExp(E)), evalExp(E, EE) | SE, EE) .
+		-- lemma 1S
+		eq exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+		-- simplify theorem
+		eq nth(N,IL) = nth(1st(simplify(N,IL)),2nd(simplify(N,IL))) .
+		-- Modified version of lemma 1S
+			eq exec2(nth(0, gen(S) @ IL2), IL1 @ gen(S) @ IL2, PC, SE, EE) = exec2(nth(0, IL2), IL1 @ gen(S) @ IL2, PC + len(gen(S)), SE, eval(S, EE)) .
+		-- THE FOLLOWING REDUCTION LOOPS AND CANNOT EXTRACT jumpOnCond(s(s(0))) USING simplify()
+		red th(if e { s1 } else { s2 }) .
+	close
+
 -- THEOREM: INDUCTION CASE
 	-- case splitting: eval(s2,eval(s1,empEnv)) = ErrEnv
 	open VERIFY-COMP .

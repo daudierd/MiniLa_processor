@@ -326,7 +326,7 @@ mod! VERIFY-COMP {
 	op lemPev : ExpPNat Env&Err -> Bool .
 	op lemLadd : IList IList -> Bool .
 	
-	vars E E1 E2 : Exp . var EN : ExpPNat . var V : Var . var S : Stm .
+	vars E E1 E2 : Exp . var EN : ExpPNat . var V : Var . var S : Stm . vars N PC : PNat .
 	vars IL IL1 IL2 : IList . var I : Instr . var SE : Stack&Err . var EV : Env . var EE : Env&Err .
 	
 	eq th(S) = (inter(S) = vm(comp(S))) .

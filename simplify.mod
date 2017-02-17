@@ -17,7 +17,9 @@ mod! SIMPLIFY { pr(PNAT) pr(ILIST) pr(NTHPAIR) pr(VM)
 	op s-th : PNat IList -> Bool .
 	
 	vars IL IL1 IL2 : IList . vars N M : PNat . var I : Instr .
-	-- simplification already handled by nth operator
+	-- basic simplification equations
+	eq simplify(0, IL) = (0, IL) .
+	eq simplify(s(N), iln) = (s(N), iln) .
 	eq simplify(s(N), I | IL) = simplify(N, IL) .
 	
 	-- new simplification equations
