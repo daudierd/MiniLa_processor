@@ -1,13 +1,3 @@
--- ----------------------------------------------------------
---                                                         --
---       MiniLa language processor verified compiler       --
---                 PROOF  SCORES - LEMMA 1                 --
---                                                         --
---                     DAUDIER, Dorian                     --
---            Special research student at JAIST            --
---                                                         --
--- ----------------------------------------------------------
-
 in calculator.mod
 
 -- ------------
