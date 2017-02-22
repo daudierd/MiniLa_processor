@@ -149,7 +149,181 @@ open VERIFY-COMP .
 	red lem1S(v := e ;, il1, il2, stk, ev) .
 close
 
--- INDUCTION CASE
+-- PRELIMINARY: Lemma 1S with exec2 & hd
+-- exec2(hd(gen(S) @ IL2), IL1 @ gen(S) @ IL2, len(IL1), SE, EV = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EV))
+open VERIFY-COMP .
+	pr(DEL)
+	op s : -> Stm .
+	ops il1 il2 : -> IList .
+	op stk : -> Stack&Err .
+	op ev : -> Env .
+	
+	-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
+		
+	-- CHECK
+		-- PART 1
+		red exec2(nth(0, gen(s) @ il2), il1 @ gen(s) @ il2, len(il1), stk, ev) = exec(il1 @ gen(s) @ il2, len(il1), stk, ev) .
+		
+		-- lemma 1S
+		eq exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+
+		-- PART 2
+		red exec2(hd(gen(s) @ il2), il1 @ gen(s) @ il2, len(il1), stk, ev) = exec2(nth(0, gen(s) @ il2), il1 @ gen(s) @ il2, len(il1), stk, ev) .
+		red exec(il1 @ gen(s) @ il2, len(il1), stk, ev) = exec(il1 @ gen(s) @ il2, len(il1 @ gen(s)), stk, eval(s, ev)) .
+close
+
+-- INDUCTION BY CONDITIONAL STRUCTURE
+	-- CASE 1 : Case splitting, evalExp(e, ev) = 0
+	open VERIFY-COMP .
+		pr(DEL)
+		op e : -> Exp .
+		ops s1 s2 : -> Stm .
+		ops il1 il2 : -> IList .
+		op stk : -> Stack&Err .
+		op ev : -> Env .
+		
+	-- HYPOTHESIS
+		-- Case splitting : evalExp(e, ev) = 0
+		eq evalExp(e,ev) = 0 .
+		-- lemma 1S (Induction Hypothesis)
+		eq exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+		-- lemma 1S (Induction Hypothesis, with exec2 & hd)
+		eq exec2(hd(gen(S) @ IL2), IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+		
+	-- LEMMAS
+		-- lemma Ladd (reversed)
+		eq len(IL2 @ IL1) = len(IL1) + len(IL2) .
+		-- lemma 1E
+		eq exec(IL1 @ genExp(E) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(E) @ IL2, len(IL1) + len(genExp(E)), evalExp(E, EE) | SE, EE) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
+		-- lemma Y-1
+		eq len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E))) .
+		
+		-- CHECK: 3-stepped verification
+			-- We use a 3-stepped verification combined with strategy chosen for exec2, to avoid parenthesis reorganization and use lemma 1S
+			op pca : -> PNat .
+			ops ila ilb : -> IList .
+			
+			eq pca = s(s(s((len(il1) + (len(gen(s1)) + len(genExp(e))))))) .
+			eq ila = (il1 @ (genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | (gen(s1) @ (jump(s(len(gen(s2)))) | (gen(s2) @ il2))))))) .
+			
+			eq ilb = il1 @ (genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | (gen(s1) @ (jump(s(len(gen(s2)))) | iln))))) .
+			
+		-- step 1 : LHS = f(X)
+			red exec(il1 @ gen(if (e) { s1 } else { s2 }) @ il2, len(il1), stk, ev) = exec2(hd(gen(s2) @ il2),ila,pca,stk,ev) .
+			
+		-- step 2 : X = Y
+			red ila = ilb @ gen(s2) @ il2 .
+			red len(ilb) = pca .
+			
+		-- step 3 : f(Y) = RHS
+			red exec2(hd(gen(s2) @ il2), ilb @ gen(s2) @ il2, len(ilb), stk, ev) = exec(il1 @ gen(if (e) { s1 } else { s2 }) @ il2, len(il1 @ gen(if (e) { s1 } else { s2 })), stk, eval(if (e) { s1 } else { s2 }, ev)) .
+	close
+	
+	-- CASE 2.1 : Case splitting, evalExp(e, ev) > 0
+	-- eval(s1,empEnv) has no error
+	open VERIFY-COMP .
+		pr(DEL)
+		op e : -> Exp .
+		ops s1 s2 : -> Stm .
+		ops il1 il2 : -> IList .
+		op stk : -> Stack&Err .
+		ops ev ev2 : -> Env .
+	-- HYPOTHESIS
+		-- Case splitting : evalExp(e, ev) > 0
+		eq evalExp(e,ev) = s(N) .
+		-- eval(s1,ev) is not errEnv
+		eq eval(s1,ev) = ev2 .
+		-- lemma 1S (Induction Hypothesis)
+		eq exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+		-- lemma 1S (Induction Hypothesis, with exec2 & hd)
+		eq exec2(hd(gen(S) @ IL2), IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+		
+	-- LEMMAS
+		-- lemma Ladd (reversed)
+		eq len(IL2 @ IL1) = len(IL1) + len(IL2) .
+		-- lemma 1E
+		eq exec(IL1 @ genExp(E) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(E) @ IL2, len(IL1) + len(genExp(E)), evalExp(E, EE) | SE, EE) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
+		-- lemma Y-1
+		eq len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E))) .
+
+	-- CHECK: 3-stepped verification
+			op pca : -> PNat .
+			ops ila il1b il2b : -> IList .
+			
+			eq pca = s(s((len(genExp(e)) + len(il1)))) .
+			eq ila = (il1 @ (genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | (gen(s1) @ (jump(s(len(gen(s2)))) | (gen(s2) @ il2))))))) .
+			
+			eq il1b = il1 @ (genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | iln))) .
+			eq il2b = (jump(s(len(gen(s2)))) | (gen(s2) @ il2)) .
+		
+	-- step 1 : LHS = f(X)
+		red exec(il1 @ gen(if (e) { s1 } else { s2 }) @ il2, len(il1), stk, ev) = exec2(hd(gen(s1) @ il2b),ila,pca,stk,ev) .
+		
+	-- step 2 : X = Y
+		red ila = il1b @ gen(s1) @ il2b .
+		red len(il1b) = pca .
+		
+	-- step 3 : f(Y) = RHS
+		red exec2(hd(gen(s1) @ il2b), il1b @ gen(s1) @ il2b, len(il1b), stk, ev) = exec(il1 @ gen(if (e) { s1 } else { s2 }) @ il2, len(il1 @ gen(if (e) { s1 } else { s2 })), stk, eval(if (e) { s1 } else { s2 }, ev)) .
+	close
+	
+	-- CASE 2.2 : Case splitting, evalExp(e, ev) > 0
+	-- eval(s1,ev) has error
+	open VERIFY-COMP .
+	pr(DEL)
+	op e : -> Exp .
+	ops s1 s2 : -> Stm .
+	ops il1 il2 : -> IList .
+	op stk : -> Stack&Err .
+	ops ev : -> Env .
+
+	-- HYPOTHESIS
+		-- Case splitting : evalExp(e, ev) > 0
+		eq evalExp(e,ev) = s(N) .
+		-- eval(s1,ev) is errEnv
+		eq eval(s1,ev) = errEnv .
+		-- lemma 1S (Induction Hypothesis)
+		eq exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+		-- lemma 1S (Induction Hypothesis, with exec2 & hd)
+		eq exec2(hd(gen(S) @ IL2), IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+
+	-- LEMMAS
+		-- lemma Ladd (reversed)
+		eq len(IL2 @ IL1) = len(IL1) + len(IL2) .
+		-- lemma 1E
+		eq exec(IL1 @ genExp(E) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(E) @ IL2, len(IL1) + len(genExp(E)), evalExp(E, EE) | SE, EE) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
+		-- lemma Y-1
+		eq len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E))) .
+
+	-- CHECK: 3-stepped verification
+			op pca : -> PNat .
+			ops ila il1b il2b : -> IList .
+			
+			eq pca = s(s((len(genExp(e)) + len(il1)))) .
+			eq ila = (il1 @ (genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | (gen(s1) @ (jump(s(len(gen(s2)))) | (gen(s2) @ il2))))))) .
+			
+			eq il1b = il1 @ (genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | iln))) .
+			eq il2b = (jump(s(len(gen(s2)))) | (gen(s2) @ il2)) .
+		
+	-- step 1 : LHS = f(X)
+		red exec(il1 @ gen(if (e) { s1 } else { s2 }) @ il2, len(il1), stk, ev) = exec2(hd(gen(s1) @ il2b),ila,pca,stk,ev) .
+		
+	-- step 2 : X = Y
+		red ila = il1b @ gen(s1) @ il2b .
+		red len(il1b) = pca .
+		
+	-- step 3 : f(Y) = RHS
+		red exec2(hd(gen(s1) @ il2b), il1b @ gen(s1) @ il2b, len(il1b), stk, ev) = exec(il1 @ gen(if (e) { s1 } else { s2 }) @ il2, len(il1 @ gen(if (e) { s1 } else { s2 })), stk, eval(if (e) { s1 } else { s2 }, ev)) .
+	close
+
+-- INDUCTION BY SEQUENTIAL COMPOSITION
 open VERIFY-COMP .
 	ops s1 s2 : -> Stm .
 	ops il1 il2 : -> IList .

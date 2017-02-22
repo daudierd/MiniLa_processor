@@ -141,6 +141,142 @@ open VERIFY-COMP .
 	red th1(v,e) implies th(v := e ;) . 
 close
 
+-- Stm = if E { S1 } else { S2 }
+	-- CASE 1 : Case splitting, evalExp(e, empEnv) = 0
+	open VERIFY-COMP .
+		pr(DEL)
+		op e : -> Exp .
+		ops s1 s2 : -> Stm .
+		ops il1 il2 : -> IList .
+		
+	-- HYPOTHESIS
+		-- Case splitting : evalExp(e, empEnv) = 0
+		eq evalExp(e,empEnv) = 0 .
+		
+	-- LEMMAS
+		-- lemma Ladd (reversed)
+		eq len(IL1 @ IL2) = len(IL1) + len(IL2) .
+		-- lemma 1E-0
+		eq exec(genExp(E) @ IL2, 0, SE, EE) = exec(genExp(E) @ IL2, len(genExp(E)), evalExp(E, EE) | SE, EE) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
+		-- lemma 1S (version with exec2)
+		eq exec2(nth(0,gen(S) @ IL2), IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec2(nth(0,IL2), IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+		
+	-- CHECK: 3-stepped verification
+		-- We use a 3-stepped verification combined with strategy chosen for exec2, to avoid parenthesis reorganization and use lemma 1S
+			op pca : -> PNat .
+			ops ila il1b il2b : -> IList .
+			
+			eq pca = s(s(s((len(gen(s1)) + len(genExp(e)))))) .
+			eq ila = (genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | (gen(s1) @ (jump(s(len(gen(s2)))) | (gen(s2) @ (quit | iln))))))) .
+			
+			eq il1b = genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | (gen(s1) @ (jump(s(len(gen(s2)))) | iln)))) .
+			eq il2b = (quit | iln) .
+		-- step 1 : LHS = f(X)
+		red vm(comp(if e {s1} else {s2})) = exec2(nth(0, gen(s2) @ il2b), ila, pca, empstk, empEnv) .
+		
+		-- step 2 : X = Y
+		red ila = il1b @ gen(s2) @ il2b .
+		red len(il1b) = pca .
+		
+		-- step 3 : f(Y) = RHS
+		red exec2(nth(0, gen(s2) @ il2b), il1b @ gen(s2) @ il2b, len(il1b), empstk, empEnv) = inter(if e {s1} else {s2}) .
+	close
+	
+	-- CASE 2.1 : Case splitting, evalExp(e, empEnv) > 0
+	-- eval(s1,empEnv) has no error
+	open VERIFY-COMP .
+		pr(DEL)
+		op e : -> Exp .
+		ops s1 s2 : -> Stm .
+		ops il1 il2 : -> IList .
+		op ev : -> Env .
+		
+	-- HYPOTHESIS
+		-- Case splitting : evalExp(e, ev) > 0
+		eq evalExp(e,empEnv) = s(N) .
+		-- eval(s1,empEnv) is not errEnv
+		eq eval(s1,empEnv) = ev .
+		
+	-- LEMMAS
+		-- lemma Ladd (reversed)
+		eq len(IL1 @ IL2) = len(IL1) + len(IL2) .
+		-- lemma 1E-0
+		eq exec(genExp(E) @ IL2, 0, SE, EE) = exec(genExp(E) @ IL2, len(genExp(E)), evalExp(E, EE) | SE, EE) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
+		-- lemma 1S (version with exec2)
+		eq exec2(nth(0,gen(S) @ IL2), IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec2(nth(0,IL2), IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+			
+		-- CHECK: 3-stepped verification
+				op pca : -> PNat .
+				ops ila il1b il2b : -> IList .
+				
+				eq pca = s(s(len(genExp(e)))) .
+				eq ila = genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | (gen(s1) @ (jump(s(len(gen(s2)))) | (gen(s2) @ (quit | iln)))))) .
+				
+				eq il1b = genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | iln)) .
+				eq il2b = (jump(s(len(gen(s2)))) | (gen(s2) @ (quit | iln))) .
+			
+			-- step 1 : LHS = f(X)
+			red vm(comp(if e {s1} else {s2})) = exec2(nth(0, gen(s1) @ il2b), ila, pca, empstk, empEnv) .
+			
+			-- step 2 : X = Y
+			red ila = il1b @ gen(s1) @ il2b .
+			red len(il1b) = pca .
+			
+			-- step 3 : f(Y) = RHS
+			red exec2(nth(0, gen(s1) @ il2b), il1b @ gen(s1) @ il2b, len(il1b), empstk, empEnv) = inter(if e {s1} else {s2}) .
+	close
+	
+	-- CASE 2.2 : Case splitting, evalExp(e, empEnv) > 0
+	-- eval(s1,empEnv) has error
+	open VERIFY-COMP .
+		pr(DEL)
+		op e : -> Exp .
+		ops s1 s2 : -> Stm .
+		ops il1 il2 : -> IList .
+		
+	-- HYPOTHESIS
+		-- Case splitting : evalExp(e, empEnv) > 0
+		eq evalExp(e,empEnv) = s(N) .
+		-- eval(s1,empEnv) is errEnv
+		eq eval(s1,empEnv) = errEnv .
+	
+	-- LEMMAS
+		-- lemma Ladd (reversed)
+		eq len(IL1 @ IL2) = len(IL1) + len(IL2) .
+		-- lemma 1E-0
+		eq exec(genExp(E) @ IL2, 0, SE, EE) = exec(genExp(E) @ IL2, len(genExp(E)), evalExp(E, EE) | SE, EE) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
+		-- lemma 1S (version with exec2)
+		eq exec2(nth(0,gen(S) @ IL2), IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec2(nth(0,IL2), IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+			
+		-- CHECK: 3-stepped verification
+				op pca : -> PNat .
+				ops ila il1b il2b : -> IList .
+				
+				eq pca = s(s(len(genExp(e)))) .
+				eq ila = genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | (gen(s1) @ (jump(s(len(gen(s2)))) | (gen(s2) @ (quit | iln)))))) .
+				
+				eq il1b = genExp(e) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(s1))))) | iln)) .
+				eq il2b = (jump(s(len(gen(s2)))) | (gen(s2) @ (quit | iln))) .
+			
+			red vm(comp(if e {s1} else {s2})) .
+			
+			-- step 1 : LHS = f(X)
+			red vm(comp(if e {s1} else {s2})) = exec2(nth(0, gen(s1) @ il2b), ila, pca, empstk, empEnv) .
+			
+			-- step 2 : X = Y
+			red ila = il1b @ gen(s1) @ il2b .
+			red len(il1b) = pca .
+			
+			-- step 3 : f(Y) = RHS
+			red exec2(nth(0, gen(s1) @ il2b), il1b @ gen(s1) @ il2b, len(il1b), empstk, empEnv) = inter(if e {s1} else {s2}) .
+	close
+
 -- THEOREM: INDUCTION CASE
 	-- case splitting: eval(s2,eval(s1,empEnv)) = ErrEnv
 	open VERIFY-COMP .
