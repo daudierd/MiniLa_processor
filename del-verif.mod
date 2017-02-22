@@ -1,0 +1,148 @@
+-- ----------------------------------------------------------
+--                                                         --
+--       MiniLa language processor verified compiler       --
+--        DEFINITION & VERIFICATION OF DEL OPERATOR        --
+--                                                         --
+--                     DAUDIER, Dorian                     --
+--            Special research student at JAIST            --
+--                                                         --
+-- ----------------------------------------------------------
+
+in calculator.mod
+
+mod! DEL {
+	pr(COMP)
+	pr(VM)
+
+	op tl : NnIList -> IList .
+	op tl : Iln -> ErrIList .
+	op tl : IList&Err -> IList&Err .	
+	op del : PNat IList -> IList .
+
+	-- definition
+	var N : PNat . vars IL IL1 IL2 : IList . var I : Instr .
+	eq tl(errIList) = errIList .
+	eq tl(iln) = errIList .
+	eq tl(I | IL) = IL .
+	
+	eq del(N, iln) = errIList .
+	eq del(0, IL) = IL .
+	eq del(s(N), I | IL) = del(N, IL) .
+	
+	-- equations to prove
+	-- once proved, these equations can safely be used in a practical definition of the operator
+	op lem0 : PNat Instr IList -> Bool .
+	op lem1 : PNat IList -> Bool .
+	op lem2 : PNat IList IList -> Bool .
+	op lem3 : PNat IList IList -> Bool .
+	op lem3-0 : IList IList -> Bool .
+	
+	eq lem0(N, I, IL) = (tl(del(N, I | IL)) = del(N, IL)) .
+	eq lem1(N, IL) = (del(s(N), IL) = tl(del(N, IL))) .
+	eq lem2(N, IL1, IL2) = (del(s(N), IL1 @ IL2) = tl(del(N, IL1 @ IL2))) .
+	eq lem3(N, IL1, IL2) = (del(len(IL1) + N, IL1 @ IL2) = del(N, IL2)) . 
+	eq lem3-0(IL1, IL2) = (del(len(IL1), IL1 @ IL2) = del(0, IL2)) . 
+}
+
+-- ----------
+-- LEMMA 0 --
+-- ----------
+
+-- BASE CASE
+open DEL .
+	op il : -> IList .
+	op i : -> Instr .
+	
+	red lem0(0, i, il) .
+close
+
+-- INDUCTION CASE
+open DEL .
+	op il : -> IList .
+	ops i1 i2 : -> Instr .
+	op n : -> PNat .
+	
+	-- IH
+	eq tl(del(n, I | IL)) = del(n, IL) .
+	
+	-- check
+	red lem0(s(n), i1, iln) .
+	red lem0(s(n), i1, i2 | il) .
+close
+
+-- ----------
+-- LEMMA 1 --
+-- ----------
+
+-- BASE CASE
+open DEL .
+	op il : -> IList .
+	op i : -> Instr .
+	
+	red lem1(0, iln) .
+	red lem1(0, i | il) .
+close
+
+-- INDUCTION CASE
+open DEL .
+	op il : -> IList .
+	op i : -> Instr .
+	op n : -> PNat .
+	
+	-- IH
+	eq del(s(n), IL) = tl(del(n, IL)) .
+	
+	-- lemma 0
+	eq tl(del(N, I | IL)) = del(N, IL) .
+	
+	-- check
+	red lem1(s(n), iln) .
+	red lem1(s(n), i | il) .
+close
+
+-- ----------
+-- LEMMA 2 --
+-- ----------
+
+open DEL .
+	ops il1 il2 : -> IList .
+	op n : -> PNat .
+	
+	red lem1(n, il1 @ il2) implies lem2(n, il1, il2).
+close
+
+-- ----------
+-- LEMMA 3 --
+-- ----------
+
+-- del(len(IL1) + N, IL1 @ IL2) = del(N, IL2)
+
+-- BASE CASE
+open DEL .
+	op il : -> IList .
+	op n : -> PNat .
+	
+	red lem3(n, iln, il) .
+close
+
+-- INDUCTION CASE
+open DEL .
+	ops il1 il2 : -> IList .
+	op i : -> Instr .
+	op n : -> PNat .
+	
+	-- IH
+	eq del(len(il1) + N, il1 @ IL2) = del(N, IL2) .
+	
+	-- check
+	red lem3(n, i | il1, il2) .
+close
+
+-- ------------
+-- LEMMA 3-0 --
+-- ------------
+
+open DEL .
+	ops il1 il2 : -> IList .
+	red lem3(0, il1, il2) implies lem3-0(il1, il2) .
+close
