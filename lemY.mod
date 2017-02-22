@@ -1,7 +1,7 @@
 -- ----------------------------------------------------------
 --                                                         --
 --       MiniLa language processor verified compiler       --
---              PROOF  SCORES - LEMMAS X and Y             --
+--                 PROOF  SCORES - LEMMA Y                 --
 --                                                         --
 --                     DAUDIER, Dorian                     --
 --            Special research student at JAIST            --
@@ -10,51 +10,7 @@
 
 in calculator.mod
 
--- LEMMA X is used to simplify the expression of nth(PC, IL1 @ IL2) by identification of the term 'len(IL1)' in PC
-
 -- LEMMA Y rewrites the length of a sequence of instructions ending with an orphan instruction I
-
--- ------------
--- LEMMA X-0 --
--- ------------
-
--- BASE CASE
-open VERIFY-COMP .
-	ops il : -> IList .
-	-- check
-	red lemX-0(iln, il) .
-close
-
--- INDUCTION CASE
-open VERIFY-COMP .
-	ops il1 il2 : -> IList .
-	op i : -> Instr .
-	-- IH
-	eq nth(len(il1), il1 @ il2) = nth(0, il2) .
-	-- check
-	red lemX-0(i | il1, il2) .
-close
-
--- ------------
--- LEMMA X-1 --
--- ------------
-
--- BASE CASE
-open VERIFY-COMP .
-	ops il : -> IList .
-	-- check
-	red lemX-1(iln, il) .
-close
-
--- INDUCTION CASE
-open VERIFY-COMP .
-	ops il1 il2 : -> IList .
-	op i : -> Instr .
-	-- IH
-	eq nth(s(len(il1)), il1 @ il2) = nth(s(0), il2) .
-	-- check
-	red lemX-1(i | il1, il2) .
-close
 
 -- ------------
 -- LEMMA Y-0 --
