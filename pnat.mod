@@ -7,9 +7,9 @@ mod! PNAT principal-sort PNat {
 	op if_then{_}else{_} : Bool PNat&Err PNat&Err -> PNat&Err .
 	op _<_ : PNat PNat -> Bool .
 	op _<_ : PNat&Err PNat&Err -> Bool .
-	op _+_ : PNat PNat -> PNat .
+	op _+_ : PNat PNat -> PNat {assoc comm} .
 	op _+_ : PNat&Err PNat&Err -> PNat&Err .
-	op _*_ : PNat PNat -> PNat .
+	op _*_ : PNat PNat -> PNat {assoc comm} .
 	op _*_ : PNat&Err PNat&Err -> PNat&Err .
 	op sd : PNat PNat -> PNat .
 	op sd : PNat&Err PNat&Err -> PNat&Err .
