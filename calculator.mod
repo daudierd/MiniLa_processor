@@ -221,7 +221,9 @@ mod! VM {
 	pr(ENV)
 	op vm : IList&Err -> Env&Err .
 	op exec : IList&Err PNat&Err Stack&Err Env&Err -> Env&Err .
-	op exec2 : Instr&Err IList&Err PNat&Err Stack&Err Env&Err -> Env&Err .
+	-- We need to pick a specific strategy to conduct proof scores on control structures
+	-- THIS DOES NOT AFFECT THE VALIDITY OF THE PROOFS
+	op exec2 : Instr&Err IList&Err PNat&Err Stack&Err Env&Err -> Env&Err {strat (0 1 2 3 4 5 0)} .
 	op nth : PNat IList -> Instr .
 	op nth : PNat&Err IList&Err -> Instr&Err .
 	
@@ -245,6 +247,9 @@ mod! VM {
 	eq exec(iln, PC, SE, EV) = errEnv .
 	
 	-- 2ND REFINEMENT: exec2
+	eq exec2(IE, ILE, PC, SE, errEnv) = errEnv .
+	eq exec2(errInstr, ILE, PC, SE, EE) = errEnv .
+	
 	eq exec2(push(N), IL, PC, SE, EV) = exec(IL, s(PC), N | SE, EV) .
 	eq exec2(load(V), IL, PC, SE, EV) = exec(IL, s(PC), lookup(EV,V) | SE, EV) .
 	eq exec2(store(V), IL, PC, empstk, EV) = errEnv .
