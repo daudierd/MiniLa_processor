@@ -70,7 +70,7 @@ open VERIFY-COMP .
 	eq exec(IL1 @ genExp(e2) @ IL2, len(IL1), SE, EE) = exec(IL1 @ genExp(e2) @ IL2, len(genExp(e2)) + len(IL1), evalExp(e2, EE) | SE, EE) .
 	
 	-- lemma Ladd
-	eq len(IL1) + len(IL2) = len(IL2 @ IL1) .
+	eq len(IL1) + len(IL2) = len(IL1 @ IL2) .
 	-- lemma X
 	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
 	-- lemma Y-2
@@ -111,7 +111,7 @@ open VERIFY-COMP .
 	op ev : -> Env .
 	
 	-- lemma Ladd
-	eq len(IL1) + len(IL2) = len(IL2 @ IL1) .
+	eq len(IL1) + len(IL2) = len(IL1 @ IL2) .
 	-- lemma X
 	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
 	-- lemma Y-1
@@ -131,7 +131,7 @@ open VERIFY-COMP .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
 	-- lemma Ladd
-	eq len(IL1) + len(IL2) = len(IL2 @ IL1) .
+	eq len(IL1) + len(IL2) = len(IL1 @ IL2) .
 	-- IH
 	eq exec(IL @ gen(s1) @ IL2, len(IL), SE, EE) = exec(IL @ gen(s1) @ IL2, len(gen(s1)) + len(IL), SE, eval(s1, EE)) .
 	eq exec(IL @ gen(s2) @ IL2, len(IL), SE, EE) = exec(IL @ gen(s2) @ IL2, len(gen(s2)) + len(IL), SE, eval(s2, EE)) .

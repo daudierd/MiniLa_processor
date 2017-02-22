@@ -1,7 +1,7 @@
 -- ----------------------------------------------------------
 --                                                         --
 --       MiniLa language processor verified compiler       --
---                 PROOF  SCORES - LEMMA 1                 --
+--              PROOF  SCORES - LEMMAS X and Y             --
 --                                                         --
 --                     DAUDIER, Dorian                     --
 --            Special research student at JAIST            --
@@ -9,6 +9,10 @@
 -- ----------------------------------------------------------
 
 in calculator.mod
+
+-- LEMMA X is used to simplify the expression of nth(PC, IL1 @ IL2) by identification of the term 'len(IL1)' in PC
+
+-- LEMMA Y rewrites the length of a sequence of instructions ending with an orphan instruction I
 
 -- ------------
 -- LEMMA X-0 --
@@ -77,7 +81,7 @@ close
 -- LEMMA Y-1 --
 -- ------------
 
--- Proving lemY as a special case of lemY-0
+-- Proving lemY-1 as a special case of lemY-0
 open VERIFY-COMP .
 	op i : -> Instr .
 	ops il1 il2 : -> IList .
@@ -94,7 +98,7 @@ close
 -- LEMMA Y-2 --
 -- ------------
 
--- Proving lemY as a special case of lemY-0
+-- Proving lemY-2 as a special case of lemY-0
 open VERIFY-COMP .
 	op i : -> Instr .
 	ops il1 il2 : -> IList .

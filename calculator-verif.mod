@@ -99,7 +99,7 @@ close
 		op e : -> Exp .
 		op v : -> Var .
 		op ev : -> Env .
-		-- lemma 2 (version with IL1 = iln)
+		-- lemma 1E-0
 		eq exec(genExp(E) @ IL2, 0, SE, EE) = exec(genExp(E) @ IL2, len(genExp(E)), evalExp(E, EE) | SE, EE) .
 		-- lemma X
 		eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
@@ -157,8 +157,9 @@ close
 	open VERIFY-COMP .
 		ops s1 s2 : -> Stm .
 		op ev : -> Env .
-		-- lemma 3 (standard + with IL1 = iln)
+		-- lemma 1S
 		eq exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
+		-- lemma 1S-0
 		eq exec(gen(S) @ IL2, 0, SE, EE) = exec(gen(S) @ IL2, len(gen(S)), SE, eval(S, EE)) .
 		-- lemma X
 		eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
