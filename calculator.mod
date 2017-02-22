@@ -389,7 +389,7 @@ mod! VERIFY-COMP {
 	pr(INTER)
 	pr(VM)
 	
-	vars E E1 E2 : Exp . var EN : ExpPNat . var V : Var . var S : Stm .
+	vars E E1 E2 : Exp . var EN : ExpPNat . var V : Var . var S : Stm . var N : PNat .
 	vars IL IL1 IL2 : IList . var I : Instr . var SE : Stack&Err . var EV : Env . var EE : Env&Err .
 	
 	-- CORRECTNESS OF THE COMPILER

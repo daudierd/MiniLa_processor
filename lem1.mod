@@ -9,17 +9,24 @@
 -- ----------------------------------------------------------
 
 in calculator.mod
+in del.mod
 
--- -----------------------------------------------
--- LEMMA X & Y PROOFS CAN BE FOUND IN lemXY.mod --
--- -----------------------------------------------
-
--- nth(len(IL1), IL1 @ IL2) = nth(0, IL2)
--- nth(s(len(IL1)), IL1 @ IL2) = nth(s(0), IL2)
+-- ------------------------------------------
+-- LEMMA Y PROOFS CAN BE FOUND IN lemY.mod --
+-- ------------------------------------------
 
 -- len(IL @ (I | iln)) = s(len(IL))
 -- len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E)))
 -- len(IL @ genExp(E1) @ genExp(E2) @ (I | iln)) = s(len(IL @ genExp(E1) @ genExp(E2)))
+
+	-- nb: lemma X is no longer needed
+	
+-- --------------------------------------------
+-- NTH-DEL PROOF CAN BE FOUND IN nth-del.mod --
+-- --------------------------------------------
+
+-- nth(N, IL) = hd(del(N, IL))
+
 
 -- -----------
 -- LEMMA 1E --
@@ -30,14 +37,16 @@ in calculator.mod
 -- BASE CASE
 	-- Exp -> PNat
 open VERIFY-COMP .
+	pr(DEL)
 	op en : -> ExpPNat .
 	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
+	
 	-- lemma Pev
 	eq evalExp(EN, EV) = en2n(EN) .
-	-- lemma X
-	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
+	-- Nth-del theorem
+	eq nth(N, IL) = hd(del(N, IL)) .
 	-- check
 	red lem1E(en, il1, il2, stk, errEnv) .
 	red lem1E(en, il1, il2, stk, ev) .
@@ -45,14 +54,16 @@ close
 
 	-- Exp -> Var
 open VERIFY-COMP .
+	pr(DEL)
 	op v : -> Var .
 	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
 	op ev : -> Env .
+	
 	-- lemma Pev
 	eq evalExp(EN, EV) = en2n(EN) .
-	-- lemma X
-	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
+	-- Nth-del theorem
+	eq nth(N, IL) = hd(del(N, IL)) .
 	-- check
 	red lem1E(v, il1, il2, stk, errEnv) .
 	red lem1E(v, il1, il2, stk, ev) .
@@ -60,6 +71,7 @@ close
 
 -- INDUCTION CASE
 open VERIFY-COMP .
+	pr(DEL)
 	ops e e1 e2 : -> Exp .
 	ops il1 il2 : -> IList .
 	op stk : -> Stack&Err .
@@ -71,8 +83,8 @@ open VERIFY-COMP .
 	
 	-- lemma Ladd
 	eq len(IL1) + len(IL2) = len(IL1 @ IL2) .
-	-- lemma X
-	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
+	-- Nth-del theorem
+	eq nth(N, IL) = hd(del(N, IL)) .
 	-- lemma Y-2
 	eq len(IL @ genExp(E1) @ genExp(E2) @ (I | iln)) = s(len(IL @ genExp(E1) @ genExp(E2))) .
 	
@@ -83,6 +95,18 @@ open VERIFY-COMP .
 	red lem1E(e1 * e2, il1, il2, stk, ev) .
 	red lem1E(e1 / e2, il1, il2, stk, ev) .
 	red lem1E(e1 % e2, il1, il2, stk, ev) .
+	
+	-- Boolean operations
+		-- e1 and e2 evaluate as natural numbers
+		ops n1 n2 : -> PNat .
+		eq evalExp(e1,ev) = n1 .
+		eq evalExp(e2,ev) = n2 .
+	red lem1E(e1 < e2, il1, il2, stk, ev) .
+	red lem1E(e1 > e2, il1, il2, stk, ev) .
+	red lem1E(e1 === e2, il1, il2, stk, ev) .
+	red lem1E(e1 =!= e2, il1, il2, stk, ev) .
+	red lem1E(e1 && e2, il1, il2, stk, ev) .
+	red lem1E(e1 || e2, il1, il2, stk, ev) .
 close
 
 -- -----------
@@ -104,6 +128,7 @@ close
 
 	-- S = (V := E ;)
 open VERIFY-COMP .
+	pr(DEL)
 	op v : -> Var .
 	op e : -> Exp .
 	ops il1 il2 : -> IList .
@@ -112,8 +137,8 @@ open VERIFY-COMP .
 	
 	-- lemma Ladd
 	eq len(IL1) + len(IL2) = len(IL1 @ IL2) .
-	-- lemma X
-	eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
+	-- Nth-del theorem
+	eq nth(N, IL) = hd(del(N, IL)) .
 	-- lemma Y-1
 	eq len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E))) .
 	-- lemma 1E

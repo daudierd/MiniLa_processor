@@ -9,6 +9,14 @@
 -- ----------------------------------------------------------
 
 in calculator.mod
+in del.mod
+
+-- --------------------------------------------
+-- NTH-DEL PROOF CAN BE FOUND IN nth-del.mod --
+-- --------------------------------------------
+
+-- nth(N, IL) = hd(del(N, IL))
+
 
 -- -------------
 -- LEMMA Ladd --
@@ -82,12 +90,13 @@ close
 -- Exp -> any expression
 	-- Case splitting: update(empEnv,v,evalExp(e,empEnv)) = errEnv
 	open VERIFY-COMP .
+		pr(DEL)
 		op e : -> Exp .
 		op v : -> Var .
 		-- lemma 1E
 		eq exec(genExp(E) @ IL, 0, SE, EE) = exec(genExp(E) @ IL, len(genExp(E)), evalExp(E, EE) | SE, EE) .
-		-- lemma X
-		eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
 		-- case splitting hypothesis
 		eq update(empEnv,v,evalExp(e,empEnv)) = errEnv .
 		-- check
@@ -96,14 +105,14 @@ close
 	
 	-- Case splitting: update(empEnv,v,evalExp(e,empEnv)) <> errEnv
 	open VERIFY-COMP .
+		pr(DEL)
 		op e : -> Exp .
 		op v : -> Var .
 		op ev : -> Env .
 		-- lemma 1E-0
 		eq exec(genExp(E) @ IL2, 0, SE, EE) = exec(genExp(E) @ IL2, len(genExp(E)), evalExp(E, EE) | SE, EE) .
-		-- lemma X
-		eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
-		eq nth(s(len(IL1)), IL1 @ IL2) = nth(s(0), IL2) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
 		-- case splitting hypothesis
 		eq update(empEnv,v,evalExp(e,empEnv)) = ev .
 		-- check
@@ -135,14 +144,14 @@ close
 -- THEOREM: INDUCTION CASE
 	-- case splitting: eval(s2,eval(s1,empEnv)) = ErrEnv
 	open VERIFY-COMP .
+		pr(DEL)
 		ops s1 s2 : -> Stm .
+		
 		-- lemma 1S
 		eq exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
 		eq exec(gen(S) @ IL2, 0, SE, EE) = exec(gen(S) @ IL2, len(gen(S)), SE, eval(S, EE)) .
-		
-		-- lemma X
-		eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
-		eq nth(s(len(IL1)), IL1 @ IL2) = nth(s(0), IL2) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
 		-- IH
 		eq inter(s1) = vm(comp(s1)) .
 		eq inter(s2) = vm(comp(s2)) .
@@ -155,15 +164,15 @@ close
 	
 	-- case splitting: eval(s2,eval(s1,empEnv)) <> ErrEnv
 	open VERIFY-COMP .
+		pr(DEL)
 		ops s1 s2 : -> Stm .
 		op ev : -> Env .
 		-- lemma 1S
 		eq exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(IL1 @ gen(S)), SE, eval(S, EE)) .
 		-- lemma 1S-0
 		eq exec(gen(S) @ IL2, 0, SE, EE) = exec(gen(S) @ IL2, len(gen(S)), SE, eval(S, EE)) .
-		-- lemma X
-		eq nth(len(IL1), IL1 @ IL2) = nth(0, IL2) .
-		eq nth(s(len(IL1)), IL1 @ IL2) = nth(s(0), IL2) .
+		-- Nth-del theorem
+		eq nth(N, IL) = hd(del(N, IL)) .
 		-- IH
 		eq inter(s1) = vm(comp(s1)) .
 		eq inter(s2) = vm(comp(s2)) .
