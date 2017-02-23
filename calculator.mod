@@ -425,13 +425,6 @@ mod! VERIFY-COMP {
 		eq lem1S-0(S, IL, SE, EE) = (exec(gen(S) @ IL, 0, SE, EE) = exec(gen(S) @ IL, len(gen(S)), SE, eval(S, EE))) .
 		eq lem1S(S, IL1, IL2, SE, EE) = (exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(gen(S)) + len(IL1), SE, eval(S, EE))) .
 	
-	-- LEMMA X
-		-- Simplification of nth(PC, IL1 @ IL2) by identification of the term 'len(IL1)' in PC
-		op lemX-0 : IList IList -> Bool .
-		op lemX-1 : IList IList -> Bool .
-		eq lemX-0(IL1, IL2) = (nth(len(IL1), IL1 @ IL2) = nth(0, IL2)) .
-		eq lemX-1(IL1, IL2) = (nth(s(len(IL1)), IL1 @ IL2) = nth(s(0), IL2)) .
-	
 	-- LEMMA Y
 		-- Rewriting the length of a sequence of instructions ending with an orphan instruction
 		op lemY-0 : IList Instr -> Bool .
