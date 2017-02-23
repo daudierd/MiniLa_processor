@@ -1,0 +1,61 @@
+-- ----------------------------------------------------------
+--                                                         --
+--       MiniLa language processor verified compiler       --
+--       DEFINITION & VERIFICATION FOR EVAL OPERATOR       --
+--                                                         --
+--                     DAUDIER, Dorian                     --
+--            Special research student at JAIST            --
+--                                                         --
+-- ----------------------------------------------------------
+
+in calculator.mod
+
+mod! EVAL {
+	pr(COMP)
+	pr(VM)
+	pr(INTER)
+	
+	op eval : PNat&Err Stm Env&Err -> Env&Err {strat (0 1 0)} .
+	
+	-- definition
+	vars N : PNat . var S : Stm . var EE : Env&Err . var EV : Env .
+	eq eval(errPNat, S, EE) = errEnv .
+	eq eval(N, S, errEnv) = errEnv .
+	eq eval(0, S, EE) = EE .
+		-- evaluating N+1 times an environment with S = evaluating with S and environment already evaluated N times with S
+	eq eval(s(N), S, EE) = eval(S, eval(N, S, EE)) .
+	
+	-- equation to prove
+	-- once proved, this equation can safely be used in a practical definition of the operator
+	op lem : PNat Stm Env&Err -> Bool .
+	eq lem(N, S, EE) = (eval(N, S, eval(S, EE)) = eval(S, eval(N, S, EE))) .
+}
+
+-- --------
+-- LEMMA --
+-- --------
+
+-- BASE CASE
+open EVAL .
+	op s : -> Stm .
+	op ev : -> Env .
+	op ee : -> Env&Err .
+	
+	-- check
+	red lem(0, s, ev) .
+	red lem(0, s, errEnv) .
+close
+
+-- INDUCTION CASE
+open EVAL .
+	op s : -> Stm .
+	op ev : -> Env .
+	op n : -> PNat .
+	
+	-- IH
+	eq eval(n, S, eval(S, EE)) = eval(S, eval(n, S, EE)) .
+	
+	-- check
+	red lem(s(n), s, ev) .
+	red lem(s(n), s, errEnv) .
+close
