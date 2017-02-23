@@ -19,7 +19,7 @@
 -- The proof scores used to demonstrate the compiler correctness are located in the following files:
 	-- calculator-verif.mod (This is the main file)
 	-- lem1.mod
-	-- lemXY.mod
+	-- lemY.mod
 	-- nth-del.mod (for using del operator in rewrites)
 
 in table.mod
@@ -84,6 +84,7 @@ mod! STM { pr(EXP)
 	op estm : -> Stm {constr} .
 	op _:=_; : Var Exp -> Stm {constr} .
 	op if_{_}else{_} : Exp Stm Stm -> Stm {constr} .
+	op while_{_} : Exp Stm -> Stm .
 	op _ _ : Stm Stm -> Stm {constr} .
 }
 
@@ -111,6 +112,8 @@ mod! INSTR principal-sort Instr {
 	op jumpOnCond : ErrPNat -> ErrInstr .
 	op jump : PNat -> Instr {constr} .
 	op jump : ErrPNat -> ErrInstr .
+	op bjump : PNat -> Instr {constr} .
+	op bjump : ErrPNat -> ErrInstr .
 	op quit : -> Instr {constr} .
 }
 
@@ -182,6 +185,7 @@ mod! INTER { pr(PNAT) pr(EXP) pr(ENV) pr(STM)
 	eq eval(estm, EV) = EV .
 	eq eval((V := E ;), EV) = update(EV,V,evalExp(E,EV)) .
 	eq eval(if E { S1 } else { S2 }, EV) = evalIf(evalExp(E, EV), S1, S2, EV) .
+	eq eval(while E { S }, EV) = evalWhile(evalExp(E, EV), E, S, EV) .
 	eq eval(S1 S2, EV) = eval(S2, eval(S1, EV)) .
 	
 	-- 2ND REFINEMENT: evalExp
@@ -203,11 +207,16 @@ mod! INTER { pr(PNAT) pr(EXP) pr(ENV) pr(STM)
 	eq evalExp(E1 > E2,EV) = if (evalExp(E1,EV) = errPNat or evalExp(E2,EV) = errPNat) then { errPNat } else { if evalExp(E2,EV) < evalExp(E1,EV) then { s(0) } else { 0 } } .
 	
 	eq evalExp(E1 || E2,EV) = if (evalExp(E1,EV) = errPNat or evalExp(E2,EV) = errPNat) then { errPNat } else { if (evalExp(E1,EV) = s(0) or evalExp(E2,EV) = s(0)) then { s(0) } else { 0 } } .
+	
 	eq evalExp(E1 && E2,EV) = if (evalExp(E1,EV) = errPNat or evalExp(E2,EV) = errPNat) then { errPNat } else { if (evalExp(E1,EV) = s(0) and evalExp(E2,EV) = s(0)) then { s(0) } else { 0 } } .
 	
 		-- evalIf
 		eq evalIf(errPNat, S1, S2, EV) = errEnv .
 		eq evalIf(N, S1, S2, EV) = if (0 < N) then { eval(S1, EV) } else { eval(S2, EV) } .
+		
+		-- evalWhile
+		eq evalWhile(errPNat, E, S, EV) = errEnv .
+		eq evalWhile(N, E, S, EV) = if (0 < N) then { eval(while E { S }, eval(S, EV)) } else { EV } .
 }
 
 
@@ -309,6 +318,12 @@ mod! VM {
 		
 		eq exec2(jumpOnCond(N), IL, PC, empstk, EV) = errEnv .
 		eq exec2(jumpOnCond(N), IL, PC, NE | SE, EV) = if (NE = 0) then { exec(IL, s(PC), SE, EV) } else { exec(IL, PC + N, SE, EV) } .
+		
+		-- Backjump instruction updates the pointer by taking successive predecessors
+		-- This is SAFER than using (symmetric) difference, which would theoretically allow to backjump more instructions than possible
+		eq exec2(bjump(0),IL,PC,Stk,EV) = exec(IL,PC,Stk,EV) .
+		eq exec2(bjump(s(N)),IL,0,Stk,EV) = errEnv .
+		eq exec2(bjump(s(N)),IL,s(PC),Stk,EV) = exec2(bjump(N),IL,PC,Stk,EV) .
 	
 	-- Evaluation subfunctions
 	-- They are used to match boolean values with their natural number equivalent (0 for 'false' and s(0) for 'true')
@@ -365,6 +380,7 @@ mod! COMP { pr(EXP) pr(ILIST) pr(STM)
 	eq gen(estm) = iln .
 	eq gen(V := E ;) = genExp(E) @ (store(V) | iln) .
 	eq gen(if E { S1 } else { S2 }) = genExp(E) @ (jumpOnCond(s(s(0))) | (jump(s(s(len(gen(S1))))) | (gen(S1) @ (jump(s(len(gen(S2)))) | gen(S2))))) .
+	eq gen(while E {S}) = genExp(E) @ ((jumpOnCond(s(s(0))) | jump(s(s(len(gen(S))))) | gen(S)) @ (bjump(s(s(len(gen(S)) + len(genExp(E))))) | iln)) .
 	eq gen(S1 S2) = gen(S1) @ gen(S2) .
 	
 	eq en2n(0) = 0 .
