@@ -19,6 +19,7 @@
 -- The proof scores used to demonstrate the compiler correctness are located in the following files:
 	-- calculator-verif.mod (This is the main file)
 	-- lem1.mod
+	-- lem2.mod
 	-- lemY.mod
 	-- nth-del.mod (for using del operator in rewrites)
 
@@ -411,7 +412,7 @@ mod! VERIFY-COMP {
 	pr(INTER)
 	pr(VM)
 	
-	vars E E1 E2 : Exp . var EN : ExpPNat . var V : Var . var S : Stm . var N : PNat .
+	vars E E1 E2 : Exp . var EN : ExpPNat . var V : Var . var S : Stm . vars N PC : PNat .
 	vars IL IL1 IL2 : IList . var I : Instr . var SE : Stack&Err . var EV : Env . var EE : Env&Err .
 	
 	-- CORRECTNESS OF THE COMPILER
@@ -441,6 +442,14 @@ mod! VERIFY-COMP {
 		
 		eq lem1S-0(S, IL, SE, EE) = (exec(gen(S) @ IL, 0, SE, EE) = exec(gen(S) @ IL, len(gen(S)), SE, eval(S, EE))) .
 		eq lem1S(S, IL1, IL2, SE, EE) = (exec(IL1 @ gen(S) @ IL2, len(IL1), SE, EE) = exec(IL1 @ gen(S) @ IL2, len(gen(S)) + len(IL1), SE, eval(S, EE))) .
+	
+	-- LEMMA 2
+		-- Rules for rewriting exec2 calls when the instruction is a backjump over a list
+		op lem2 : PNat IList IList PNat Stack&Err Env&Err -> Bool .
+		op lem2-0 : IList IList PNat Stack&Err Env&Err -> Bool .
+		
+		eq lem2(N, IL1, IL, PC, SE, EE) = (exec2(bjump(len(IL1) + N),IL,len(IL1) + PC,SE,EE) = exec2(bjump(N),IL,PC,SE,EE)) .
+		eq lem2-0(IL1, IL, PC, SE, EE) = (exec2(bjump(len(IL1)),IL,PC + len(IL1),SE,EE) = exec2(bjump(0),IL,PC,SE,EE)) .
 	
 	-- LEMMA Y
 		-- Rewriting the length of a sequence of instructions ending with an orphan instruction
