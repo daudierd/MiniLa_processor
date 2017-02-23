@@ -10,6 +10,7 @@
 
 in calculator.mod
 in del.mod
+in eval.mod
 
 -- --------------------------------------------
 -- NTH-DEL PROOF CAN BE FOUND IN nth-del.mod --
@@ -277,6 +278,27 @@ close
 			red exec2(nth(0, gen(s1) @ il2b), il1b @ gen(s1) @ il2b, len(il1b), empstk, empEnv) = inter(if e {s1} else {s2}) .
 	close
 
+-- Stm = while E { S }
+open VERIFY-COMP .
+	pr(EVAL)
+	op n : -> PNat .
+	op e : -> Exp .
+	op s : -> Stm .
+	
+	-- TERMINATION CONDITION tc(e, s, empEnv, n)
+		ceq evalExp(e, eval(N, s, empEnv)) = s(0) if (N < n) .
+		ceq evalExp(e, eval(N, s, empEnv)) = 0 if (N = n) .
+	
+	-- LEMMAS
+		-- lemma 3, tc(e, s, empEnv, n) being verified
+		eq eval(while e {s}, empEnv) = eval(n, s, empEnv) .
+		-- lemma 4, tc(e, s, empEnv, n) being verified
+		eq eval(n, s, empEnv) = exec(gen(while e {s}) @ (quit | iln), 0, empstk, empEnv) .
+	
+	-- CHECK
+		red th(while e {s}) .
+close
+	
 -- THEOREM: INDUCTION CASE
 	-- case splitting: eval(s2,eval(s1,empEnv)) = ErrEnv
 	open VERIFY-COMP .
