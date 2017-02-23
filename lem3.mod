@@ -1,0 +1,70 @@
+-- ----------------------------------------------------------
+--                                                         --
+--       MiniLa language processor verified compiler       --
+--                 PROOF  SCORES - LEMMA 3                 --
+--                                                         --
+--                     DAUDIER, Dorian                     --
+--            Special research student at JAIST            --
+--                                                         --
+-- ----------------------------------------------------------
+
+in del.mod
+in eval.mod
+
+-- ----------
+-- LEMMA 3 --
+-- ----------
+
+-- tc(e, s, ev, n) implies eval(while e {s}, ev) = eval(n, s, ev)
+
+-- BASE CASE
+open VERIFY-COMP .
+	pr(EVAL)
+	pr(DEL)
+	op e : -> Exp .
+	op s : -> Stm .
+	op ev : -> Env .
+	
+	-- TERMINATION HYPOTHESIS
+	-- tc(e, s, ev, 0) : no loop
+	eq evalExp(e,ev) = 0 .
+	
+	-- CHECK
+	red eval(while e {s}, ev) = eval(0, s, ev) .
+close
+
+-- INDUCTION CASE
+open VERIFY-COMP .
+	pr(EVAL)
+	pr(DEL)
+	ops n k : -> PNat .
+	op e : -> Exp .
+	op s : -> Stm .
+	op ev : -> Env .
+	
+	-- TERMINATION HYPOTHESIS
+		-- tc(e, s, ev, s(n)) : while e {s} loops s(n) times in ev
+		var K : PNat .
+		ceq evalExp(e,eval(K, s, ev)) = s(0) if (K < s(n)) .
+		eq evalExp(e,eval(s(n), s, ev)) = 0 .
+	
+	-- INDUCTION HYPOTHESIS
+		-- For all E, S, EV : tc(E, S, EV, n) implies eval(while E {S}, EV) = eval(n, S, EV)
+		-- It is true a fortiori with E = e, S = s, EV = eval(s,ev)
+		
+		-- check predicate tc(e, s, eval(s,ev), n)
+		eq (k < n) = true .
+		red evalExp(e,eval(k, s, eval(s,ev))) = s(0) .
+		red evalExp(e,eval(n, s, eval(s,ev))) = 0 .
+		-- equation implied by predicate
+		eq eval(while e {s}, eval(s,ev)) = eval(n, s, eval(s,ev)) .
+		
+	-- Rewriting evalExp(e,ev)
+		red evalExp(e,ev) = evalExp(e,eval(0, s, ev)) .
+		red 0 < s(n) .
+		-- provided two previous scores are true:
+		eq evalExp(e,ev) = s(0) .
+	
+	-- CHECK
+	red eval(while e {s}, ev) = eval(s(n), s, ev) .
+close

@@ -20,8 +20,11 @@
 	-- calculator-verif.mod (This is the main file)
 	-- lem1.mod
 	-- lem2.mod
+	-- lem3.mod
+	-- lem4.mod
 	-- lemY.mod
 	-- nth-del.mod (for using del operator in rewrites)
+	-- eval.mod (for evaluating loop statements)
 
 in table.mod
 in pnat.mod
@@ -450,6 +453,16 @@ mod! VERIFY-COMP {
 		
 		eq lem2(N, IL1, IL, PC, SE, EE) = (exec2(bjump(len(IL1) + N),IL,len(IL1) + PC,SE,EE) = exec2(bjump(N),IL,PC,SE,EE)) .
 		eq lem2-0(IL1, IL, PC, SE, EE) = (exec2(bjump(len(IL1)),IL,PC + len(IL1),SE,EE) = exec2(bjump(0),IL,PC,SE,EE)) .
+	
+	-- TERMINATION CONDITION
+		-- As we cannot use quantifiers in an equation, tc cannot be written as an operator in CafeOBJ. We give the following informal definition
+		-- tc(E, S, EV, S): (while E {S}) evaluated in EV loops N times and terminates
+		
+	-- LEMMA 3
+		-- tc(e, s, ev, n) implies eval(while e {s}, ev) = eval(n, s, ev) .
+		
+	-- LEMMA 4
+		-- tc(e, s, ev, n) implies exec(gen(while e {s}) @ (quit | iln), 0, empstk, ev) = eval(n, s, ev) .
 	
 	-- LEMMA Y
 		-- Rewriting the length of a sequence of instructions ending with an orphan instruction
