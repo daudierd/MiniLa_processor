@@ -84,7 +84,7 @@ mod! STM { pr(EXP)
 	op estm : -> Stm {constr} .
 	op _:=_; : Var Exp -> Stm {constr} .
 	op if_{_}else{_} : Exp Stm Stm -> Stm {constr} .
-	op while_{_} : Exp Stm -> Stm .
+	op while_{_} : Exp Stm -> Stm {constr} .
 	op _ _ : Stm Stm -> Stm {constr} .
 }
 
@@ -174,6 +174,7 @@ mod! INTER { pr(PNAT) pr(EXP) pr(ENV) pr(STM)
 	op evalExp : ExpPNat Env -> PNat .
 	op evalExp : Exp&Err Env&Err -> PNat&Err .
 	op evalIf : PNat&Err Stm Stm Env&Err -> Env&Err .
+	op evalWhile : PNat&Err Exp&Err Stm Env&Err -> Env&Err .
 	
 	-- EQUATIONS
 	var N : PNat . var EN : ExpPNat . vars E E1 E2 : Exp .
@@ -321,9 +322,9 @@ mod! VM {
 		
 		-- Backjump instruction updates the pointer by taking successive predecessors
 		-- This is SAFER than using (symmetric) difference, which would theoretically allow to backjump more instructions than possible
-		eq exec2(bjump(0),IL,PC,Stk,EV) = exec(IL,PC,Stk,EV) .
-		eq exec2(bjump(s(N)),IL,0,Stk,EV) = errEnv .
-		eq exec2(bjump(s(N)),IL,s(PC),Stk,EV) = exec2(bjump(N),IL,PC,Stk,EV) .
+		eq exec2(bjump(0),IL,PC,SE,EV) = exec(IL,PC,SE,EV) .
+		eq exec2(bjump(s(N)),IL,0,SE,EV) = errEnv .
+		eq exec2(bjump(s(N)),IL,s(PC),SE,EV) = exec2(bjump(N),IL,PC,SE,EV) .
 	
 	-- Evaluation subfunctions
 	-- They are used to match boolean values with their natural number equivalent (0 for 'false' and s(0) for 'true')
