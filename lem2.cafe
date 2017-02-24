@@ -8,8 +8,8 @@
 --                                                         --
 -- ----------------------------------------------------------
 
-in calculator.mod
-in del.mod
+in minila.cafe
+in del.cafe
 
 -- ----------
 -- LEMMA 2 --

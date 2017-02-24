@@ -8,7 +8,7 @@
 --                                                         --
 -- ----------------------------------------------------------
 
-in calculator.mod
+in minila.cafe
 
 -- LEMMA Y rewrites the length of a sequence of instructions ending with an orphan instruction I
 

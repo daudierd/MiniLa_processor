@@ -17,17 +17,17 @@
 	-- A module dedicated to verification of the correctness, used in proof scores
 
 -- The proof scores used to demonstrate the compiler correctness are located in the following files:
-	-- calculator-verif.mod (This is the main file)
-	-- lem1.mod
-	-- lem2.mod
-	-- lem3.mod
-	-- lem4.mod
-	-- lemY.mod
-	-- nth-del.mod (for using del operator in rewrites)
-	-- eval.mod (for evaluating loop statements)
+	-- verify-comp.cafe (This is the main file)
+	-- lem1.cafe
+	-- lem2.cafe
+	-- lem3.cafe
+	-- lem4.cafe
+	-- lemY.cafe
+	-- nth-del.cafe (for using del operator in rewrites)
+	-- eval.cafe (for evaluating loop statements)
 
-in table.mod
-in pnat.mod
+in table.cafe
+in pnat.cafe
 
 -- ------------------------
 -- PRIMITIVE DEFINITIONS --

@@ -8,9 +8,9 @@
 --                                                         --
 -- ----------------------------------------------------------
 
-in calculator.mod
-in del.mod
-in eval.mod
+in minila.cafe
+in del.cafe
+in eval.cafe
 
 -- --------------------------------------------
 -- NTH-DEL PROOF CAN BE FOUND IN nth-del.mod --

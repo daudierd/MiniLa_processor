@@ -8,12 +8,12 @@
 --                                                         --
 -- ----------------------------------------------------------
 
-in calculator.mod
-in del.mod
+in minila.cafe
+in del.cafe
 
--- ------------------------------------------
--- LEMMA Y PROOFS CAN BE FOUND IN lemY.mod --
--- ------------------------------------------
+-- -------------------------------------------
+-- LEMMA Y PROOFS CAN BE FOUND IN lemY.cafe --
+-- -------------------------------------------
 
 -- len(IL @ (I | iln)) = s(len(IL))
 -- len(IL @ genExp(E) @ (I | iln)) = s(len(IL @ genExp(E)))
@@ -21,9 +21,9 @@ in del.mod
 
 	-- nb: lemma X is no longer needed
 	
--- --------------------------------------------
--- NTH-DEL PROOF CAN BE FOUND IN nth-del.mod --
--- --------------------------------------------
+-- ---------------------------------------------
+-- NTH-DEL PROOF CAN BE FOUND IN nth-del.cafe --
+-- ---------------------------------------------
 
 -- nth(N, IL) = hd(del(N, IL))
 
